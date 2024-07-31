@@ -1,0 +1,58 @@
+1. Menampilkan seluruh data employees
+SELECT * FROM employees;
+
+
+2. Menampilkan banyak karyawan yang memiliki job_title "Manager"
+SELECT COUNT(*) AS jml_manager FROM employees WHERE job_title = 'Manager';
+
+
+3. Daftar name dan salary dari karyawan Sales atau Marketing
+SELECT name, salary FROM employees WHERE department = 'Sales' OR department = 'Marketing';
+
+
+4. Rata-rata salary karyawan yang bergabung 5 tahun terakhir
+SELECT AVG(salary) AS average_salary
+FROM employees
+WHERE joined_date >= DATE_SUB(CURDATE(), INTERVAL 5 YEAR);
+
+
+5.Lima karyawan dengan total penjualan tertinggi
+SELECT e.name, SUM(s.sales) AS total_sales
+FROM employees e
+JOIN sales_data s ON e.employee_id = s.employee_id
+GROUP BY e.name
+ORDER BY total_sales DESC
+LIMIT 5;
+
+
+6. Nama, gaji (salary), dan rata-rata gaji (salary) dari semua karyawan yang bekerja di departemen yang memiliki rata-rata gaji lebih tinggi dari gaji rata-rata di semua departemen
+SELECT e.name, e.salary, avg_salary
+FROM employees e
+JOIN (
+    SELECT AVG(salary) AS avg_salary
+    FROM employees
+) AS avg_table
+WHERE e.salary > avg_table.avg_salary;
+
+
+7. Nama dan total penjualan (sales) dari setiap karyawan, bersama dengan peringkat (ranking) masing-masing karyawan berdasarkan total penjualan. Peringkat 1 adalah karyawan dengan total penjualan tertinggi
+SELECT e.name, SUM(s.sales) AS total_sales,
+       RANK() OVER (ORDER BY SUM(s.sales) DESC) AS sales_rank
+FROM employees e
+JOIN sales_data s ON e.employee_id = s.employee_id
+GROUP BY e.name
+ORDER BY total_sales DESC;
+
+
+8. Pembuatan stored procedure
+DELIMITER //
+CREATE PROCEDURE GetEmployeesByDepartment(IN dept_name VARCHAR(255))
+BEGIN
+    SELECT name, salary, SUM(salary) OVER () AS total_salary
+    FROM employees
+    WHERE department = dept_name;
+END //
+DELIMITER ;
+
+Contoh penggunaan stored procedure untuk memanggil data berdasarkan departemen Sales
+CALL GetEmployeesByDepartment('Sales');
